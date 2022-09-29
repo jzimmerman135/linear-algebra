@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+import sys
+import re
+
+"""
+Errors and Command Line Arguments
+"""
+
+def ftml_error(msg):
+    print('\033[1m' + 'ftml error:' + '\033[0m', msg)
+    sys.exit(1)
+
+def parse_arguments():
+    args = sys.argv[1:]
+    if len(args) > 2:
+        ftml_error("too many arguments")
+    elif len(args) < 1:
+        ftml_error("missing arguments")  
+    elif not args[0].endswith('.ftml'):
+        ftml_error('input file must end in .ftml')
+    elif len(args) == 2 and not args[1].endswith('.html'):
+        ftml_error('output file must end in .html')
+    else:
+        args.append(args[0].rstrip('.ftml') + '.html')
+
+    return args[0], args[1]
+
+"""
+File IO
+"""
+
+def open_ftml(infile):
+    try:
+        with open(infile, 'r') as f:
+            return f.read()
+    except IOError as e:
+        ftml_error(f'IOerror {e}')
+
+def write_html(outfile, raw_html):
+    try:
+        with open(outfile, 'w') as f:
+            f.write(raw_html)
+    except IOError as e:
+        ftml_error(f'IOerror {e}')
+
+"""
+Recursive Parsing
+"""
+
+def parse_include(include_string):
+    """
+    Parse ftml include tag, return ftml req dict
+    """
+    x = re.findall(r'(\w+)=[\"|\']([^\"\']*)[\"\']', include_string)
+    return dict(x)
+
+def ftml_parse(raw_ftml):
+    """
+    Creates list of ftml reqs from raw ftml
+    """
+    inc_tags = re.findall(r'(?<=<#include\s)\s*[^>]*', raw_ftml)
+    if inc_tags == []:
+        return None
+
+    reqs = []
+    for tag in inc_tags:
+        reqs.append(parse_include(tag))
+    
+    return reqs
+
+def ftml_to_html(raw_ftml, raw_partial, req):
+    """
+    Takes ftml string adds partial to it based on ftml req
+    """
+    # fill the get requests
+    gets = re.findall(r'(?<=<#get\s)\s*\w+[^\s>]*', raw_partial)
+    for get in gets:
+        given = req.get(get)
+        if given is None:
+            ftml_error(f"{req.get('src')} was never given the variable '{get}'")
+
+        raw_partial = re.sub(r'<#get\s+' + get + r'\s*>', given, raw_partial)
+    
+    inc_tags = re.findall(r'(?<=<#include\s)\s*[^>]*', raw_ftml)
+    for tag in inc_tags:
+        if req == parse_include(tag):
+            tag = r'<#include\s+' + tag + r'[^>]*>'
+            return re.sub(tag, raw_partial, raw_ftml)    
+    
+    ftml_error('something went wrong. Line 90 of ftml')
+
+def replace_ftml(raw_ftml, files):
+    """
+    Takes ftml string, pastes includes and returns html string
+    """
+    ftml_reqs = ftml_parse(raw_ftml)
+
+    if ftml_reqs is None:
+        return raw_ftml
+
+    for req in ftml_reqs:
+        if req.get('src') is None:
+            ftml_error(f"{files[-1]} <#include> missing src attribute")
+        elif req['src'] in files:
+            ftml_error(f"circular include detected")
+        raw_partial = open_ftml(req['src'])
+        files.append(req['src'])
+        raw_partial = replace_ftml(raw_partial, files)
+        raw_ftml = ftml_to_html(raw_ftml, raw_partial, req)
+        files.remove(files[-1])
+
+    return raw_ftml # now it is html
+
+"""
+Main execution cycle
+"""
+
+def main(infile, outfile):
+    raw_ftml = open_ftml(infile)
+    files = []
+    raw_html = replace_ftml(raw_ftml, files)
+    write_html(outfile, raw_html)
+
+if __name__ == '__main__':
+    ftml_in, html_out = parse_arguments()
+    try:
+        main(ftml_in, html_out)
+    except Exception as e:
+        ftml_error(f'unknown reason, {e}')

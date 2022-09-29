@@ -1,0 +1,6 @@
+<div class="navbar">
+    <div class="titles">
+        <h2><#get subtitle></h2>
+        <h1><#get title></h1>
+    </div>
+</div>

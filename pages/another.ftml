@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../styles/base.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <title>Zim's Linear Algebra</title>
+</head>
+<body>
+    <!-- <#include src="partials/nav.ftml" title="change of" subtitle=''> -->
+    <#include src="partials/nav.ftml" subtitle="change of" title='basis'>
+    <canvas class="content2d"></canvas>
+    <canvas class="contentWebGL"></canvas>
+</body>
+<script>
+    const ctx = document.getElementById('content2d');
+    const ctxWebGL = document.getElementById('contentWebGL');
+</script>
+</html>

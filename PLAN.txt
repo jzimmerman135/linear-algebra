@@ -1,0 +1,47 @@
+Overall Plan for the linear algebra textbook:
+    
+Rendering:
+    Normalize all coordinates to (-1, 1) x (-1, 1) with (0,0) in the middle
+    
+    Make objects:
+        - canvasPrimitive.circle()
+        - canvasPrimitive.line()
+        - canvasPrimitive.rect()
+        - canvasPrimitive.triangle()
+
+        - screenObject.Dot()
+        - screenObject.Line()
+        - screenObject.Vector()
+        - screenObject.Plane2D()
+
+        - visDesc.Dot()
+        - visDesc.Line()
+        - visualizer.Vector()
+        - visualizer.Plane1D()
+        - visualizer.Plane2D()
+        - visualizer.Plane3D()
+
+    2d Canvas:
+        - Add a background canvas 2d with the correct size
+        - Render text with Roboto font
+        - Render latex formula
+        - Render a dot ((0,0), (0.5, 0.5), (1,0), (0, 1))
+        - Render a line 
+        - Render a vector
+        - Animate a dot being created
+        - Animate a dot translation
+        - Animate a vector translation
+        - Animate a vector rotating 
+        - Animate vector rotation, then wait for keypress, then translate vector
+        
+    However I can:
+        - Render a 2d plane (not sure if canvas or webgl)
+        - Render a function to the plane (y=x, y=2x, y=-x, y=x^2)
+        - Animate between the functions
+        - Rotate the plane 
+        - Apply 2x2 matrix transformation to the plane, including a change of 
+        basis.
+
+    WebGL:
+        Render a fragShader box at coordinate (x, y) all red
+        
