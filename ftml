@@ -92,6 +92,8 @@ def ftml_to_html(raw_ftml, raw_partial, req):
 def replace_ftml(raw_ftml, files):
     """
     Takes ftml string, pastes includes and returns html string
+
+    Uses files list as a sequence to check for circular headers
     """
     ftml_reqs = ftml_parse(raw_ftml)
 
@@ -102,7 +104,8 @@ def replace_ftml(raw_ftml, files):
         if req.get('src') is None:
             ftml_error(f"{files[-1]} <#include> missing src attribute")
         elif req['src'] in files:
-            ftml_error(f"circular include detected")
+            ftml_error(f"circular include detected in {req['src']}")
+
         raw_partial = open_ftml(req['src'])
         files.append(req['src'])
         raw_partial = replace_ftml(raw_partial, files)
@@ -112,6 +115,14 @@ def replace_ftml(raw_ftml, files):
     return raw_ftml # now it is html
 
 """
+Small details
+"""
+
+def fix_paths(html):
+    html = re.sub(r'href=(["\'])..\/styles', r'href=\1styles', html)
+    return re.sub(r'<script\s+src=(["\'])..\/src', r'<script src=\1src', html)
+    
+"""
 Main execution cycle
 """
 
@@ -119,6 +130,7 @@ def main(infile, outfile):
     raw_ftml = open_ftml(infile)
     files = []
     raw_html = replace_ftml(raw_ftml, files)
+    raw_html = fix_paths(raw_html)
     write_html(outfile, raw_html)
 
 if __name__ == '__main__':

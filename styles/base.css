@@ -8,12 +8,12 @@ div > * {
 
 @font-face {
     font-family: Lora;
-    src: url(fonts/computer-modern/cmunrm.ttf);
+    src: url(../stuff/fonts/computer-modern/cmunrm.ttf);
 }
 
 @font-face {
     font-family: Roboto;
-    src: url(fonts/Roboto_Slab/static/RobotoSlab-Light.ttf);
+    src: url(../stuff/fonts/Roboto_Slab/static/RobotoSlab-Light.ttf);
 }
 
 @font-face {

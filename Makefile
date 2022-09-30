@@ -53,4 +53,4 @@ build:
 	@mkdir -p $(LIB_DIR)
 
 clean:
-	-@rm -rvf $(BUILD)/*
+	-@rm -rvf $(BUILD)/src $(BUILD)/*.html $(BUILD)/styles
