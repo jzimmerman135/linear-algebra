@@ -120,7 +120,8 @@ Small details
 
 def fix_paths(html):
     html = re.sub(r'href=(["\'])..\/styles', r'href=\1styles', html)
-    return re.sub(r'<script\s+src=(["\'])..\/src', r'<script src=\1src', html)
+    html = re.sub(r'<script\s+src=(["\'])..\/src', r'<script src=\1src', html)
+    return re.sub(r'(?=<[^#])([^>]*=[\'"][^>]*)\.ftml([^>]*>)', r'\1.html\2', html)
     
 """
 Main execution cycle

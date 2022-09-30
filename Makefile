@@ -1,6 +1,6 @@
 # transpiler
 TS			:= tsc
-FTML		:= ftml
+FTML		:= ./.ftml
 
 # transpiler flags
 TSFLAGS		:=
@@ -14,32 +14,33 @@ JSDIR		:= $(BUILD)/src
 TSIN		:= $(shell find src -name "*.ts")
 JSOUT		:= $(patsubst %.ts,$(BUILD)/%.js,$(TSIN))
 
+# stylefiles
+STYLES		= $(shell find styles -name "*" -mindepth 1) 
+
 # ftml and html files
 PAGESIN		:= $(shell find pages -name "*.ftml")
 PAGESOUT	:= $(patsubst pages/%.ftml,$(BUILD)/%.html,$(PAGESIN))
 
 PROJNAME	:= $(notdir $(PWD))
 
-dummy:
-	@echo $(TSIN)
-	@echo $(JSOUT)
-
 # everything
-all: ts styles pages 
+all: ts styles pages
 
-ts:
+ts: $(TSIN)
 	tsc $(TSIN) --outDir $(JSDIR)
 
 pages: $(PAGESOUT)
 
-styles:
+styles: $(STYLES)
+	@rm -rvf $(STYLESDIR)/*
 	@mkdir -p $(STYLESDIR)
-	@cp -r styles/* $(STYLESDIR)/
+	@cp -r styles/ $(STYLESDIR)/
 
 # ftml transpile
 $(BUILD)/%.html: pages/%.ftml
-	@mkdir -p $(@D)
-	./ftml $^ $@ 
+	@mkdir -p $(@D)	
+	@$(FTML) $^ $@ 
+	@echo "ftml $^ $@"
 
 .PHONY: all ts pages styles clean
 
