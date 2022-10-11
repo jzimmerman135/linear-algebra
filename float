@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ $# -eq 0 ]
+    then
+        echo "float error: no arguments provided"
+        exit 1
+fi
+
+if [[ $2 == "launch" ]]
+    then
+        open ./build/index.html
+fi

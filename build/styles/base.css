@@ -18,7 +18,7 @@ div > * {
 
 @font-face {
     font-family: Disco;
-    src: url("fonts/mexcellent_rg.otf");
+    src: url("../stuff/fonts/mexcellent_rg.otf");
 }
 
 html, body {

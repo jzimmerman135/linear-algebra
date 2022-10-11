@@ -10,13 +10,12 @@
     <title>Zim's Linear Algebra</title>
 </head>
 <body>
-    <#include src="partials/nav.ftml" title="Linear Algebra" subtitle='Welcome to'>
+    <#include src="partials/nav.ftml" subtitle='Welcome to' title="Linear Algebra">
     <canvas class="content2d"></canvas>
     <canvas class="contentWebGL"></canvas>
 </body>
-<script src="../src"></script>
+<script src="src/lesson1/run.ts"></script>
 <script>
-    const ctx = document.getElementById('content2d');
-    const ctxWebGL = document.getElementById('contentWebGL');
+    
 </script>
 </html>
