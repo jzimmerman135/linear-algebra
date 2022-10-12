@@ -9,43 +9,10 @@ const gl = (() => {
     return gl;
 })();
 
-interface AttributeDescriptor {
-    size: number;
-    offset: number;
-    name: string;
-    initLoc: number;
-    updateLoc: number;
-    destroyLoc: number;
+interface WebGL2RenderingContext {
+    resizeCanvas?: any;
 }
-
-function defaultAttribDescriptor(size: number, offset: number, name: string) {
-    let att: AttributeDescriptor = {
-        size: size,
-        offset: offset,
-        name: name,
-        initLoc: -1,
-        updateLoc: -1,
-        destroyLoc: -1
-    }
-    return att;
-} 
-
-interface UniformDescriptor {
-    name: string;
-    initLoc: WebGLUniformLocation | null;
-    updateLoc: WebGLUniformLocation | null; 
-    destroyLoc: WebGLUniformLocation | null; 
-}
-
-function defaultUniformDescriptor(name: string) {
-    let uni: UniformDescriptor = {
-        name: name,
-        initLoc: null,
-        updateLoc: null,
-        destroyLoc: null
-    };
-    return uni;
-}
+gl.resizeCanvas = () => {resizeCanvasToDisplaySize(gl.canvas)};
 
 function shaderCompileFail(shader: WebGLShader) {
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -61,6 +28,17 @@ function shaderLinkFail(program: WebGLProgram) {
         console.error(gl.getProgramInfoLog(program));
         gl.deleteProgram(program);
         return true;
+    }
+    return false;
+}
+
+function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement) {
+    const width  = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (canvas.width !== width ||  canvas.height !== height) {
+      canvas.width  = width;
+      canvas.height = height;
+      return true;
     }
     return false;
 }

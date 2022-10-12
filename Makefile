@@ -19,8 +19,10 @@ JSOUT		:= $(patsubst %,$(BUILD)/%,$(JSIN))
 STYLES		= $(shell find styles -name "*" -mindepth 1) 
 
 # ftml and html files
-PAGESIN		:= $(shell find pages -name "*.ftml")
-PAGESOUT	:= $(patsubst pages/%.ftml,$(BUILD)/%.html,$(PAGESIN))
+FTMLIN		:= $(shell find pages -name "*.ftml")
+FTMLOUT		:= $(patsubst pages/%.ftml,$(BUILD)/%.html,$(FTMLIN))
+HTMLIN		:= $(shell find pages -name "*.html")
+HTMLOUT		:= $(patsubst pages/%,$(BUILD)/%,$(HTMLIN))
 
 PROJNAME	:= $(notdir $(PWD))
 
@@ -35,7 +37,7 @@ ts: $(TSIN)
 launch:
 	open $(BUILD)/index.html
 
-pages: $(PAGESOUT)
+pages: $(FTMLOUT) $(HTMLOUT)
 
 # ftml transpile
 $(BUILD)/%.html: pages/%.ftml
@@ -45,6 +47,10 @@ $(BUILD)/%.html: pages/%.ftml
 
 # copy edited javascript files
 $(BUILD)/src/%.js: src/%.js
+	cp $< $@
+
+$(BUILD)/%.html: pages/%.html
+	@mkdir -p $(@D)	
 	cp $< $@
 
 .PHONY: all ts pages styles clean

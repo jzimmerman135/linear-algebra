@@ -11,11 +11,11 @@
 </head>
 <body>
     <#include src="partials/nav.ftml" subtitle='Welcome to' title="Linear Algebra">
-    <canvas id="content2d"></canvas>
+    <!-- <canvas id="content2d"></canvas> -->
     <canvas id="contentWebGL"></canvas>
 </body>
-<script src="src/point.ts"></script>
 <script src="src/shaders.ts"></script>
+<script src="src/points.ts"></script>
 <script>
     console.log('hello!');
 </script>

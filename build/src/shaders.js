@@ -8,26 +8,7 @@ var gl = (function () {
     }
     return gl;
 })();
-function defaultAttribDescriptor(size, offset, name) {
-    var att = {
-        size: size,
-        offset: offset,
-        name: name,
-        initLoc: -1,
-        updateLoc: -1,
-        destroyLoc: -1
-    };
-    return att;
-}
-function defaultUniformDescriptor(name) {
-    var uni = {
-        name: name,
-        initLoc: null,
-        updateLoc: null,
-        destroyLoc: null
-    };
-    return uni;
-}
+gl.resizeCanvas = function () { resizeCanvasToDisplaySize(gl.canvas); };
 function shaderCompileFail(shader) {
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
         console.error(gl.getShaderInfoLog(shader));
@@ -40,6 +21,16 @@ function shaderLinkFail(program) {
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
         console.error(gl.getProgramInfoLog(program));
         gl.deleteProgram(program);
+        return true;
+    }
+    return false;
+}
+function resizeCanvasToDisplaySize(canvas) {
+    var width = canvas.clientWidth;
+    var height = canvas.clientHeight;
+    if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
         return true;
     }
     return false;
