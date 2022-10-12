@@ -1,4 +1,4 @@
-const board = new Board();
+// const board = new Board();
 let p1 = board.addPoint();
 let t1 = board.addText();
 
