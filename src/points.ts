@@ -1,7 +1,3 @@
-interface PointBufferRef {
-
-};
-
 class Point {
     ref: PointBufferRef;
 
