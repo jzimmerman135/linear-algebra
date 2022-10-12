@@ -1,5 +1,5 @@
-var vertexShaderSource = "#version 300 es\nuniform vec2 u_resolution;\nuniform float u_time;\nuniform float u_anim;\n\nin vec4 a_position;\nin vec2 a_translation;\nin vec2 a_scale;\nin float a_rotation;\n\nin vec4 a_color1;\nin vec4 a_color2;\n\nout vec4 v_color;\n\nmat4 MovementMatrix() {\n    vec2 t = a_translation;\n    vec2 s = a_scale;\n    vec2 r = vec2(cos(a_rotation), sin(a_rotation));\n    vec2 a = u_resolution / max(u_resolution.x, u_resolution.y);\n    mat4 tm = mat4(  1, 0, 0, t.x,     0, 1, 0, t.y,   0,0,1,0,  0,0,0,1);\n    mat4 sm = mat4(  s.x, 0, 0, 0,     0, s.y, 0, 0,   0,0,1,0,  0,0,0,1);\n    mat4 rm = mat4(r.x, -r.y, 0, 0,  r.y, r.x, 0, 0,   0,0,1,0,  0,0,0,1);\n    mat4 am = mat4(  a.y, 0, 0, 0,     0, a.x, 0, 0,   0,0,1,0,  0,0,0,1);\n    return sm * rm * tm * am;\n}\n\nvoid main()\n{\n    vec4 a_color = a_position.x < 0.0 ? a_color1 : a_color2;\n    mat4 mm = MovementMatrix();\n    gl_Position = a_position * mm;\n    v_color = a_color;\n}";
-var fragmentShaderSource = "#version 300 es\nprecision mediump float;\n\nin vec4 v_color;\nout vec4 outColor;\nvoid main()\n{\n    outColor = v_color; \n    outColor.w = 0.1;\n}";
+var vertexShaderSource = "#version 300 es\nuniform vec2 u_resolution;\nuniform float u_time;\nuniform float u_anim;\n\nin vec4 a_position;\nin vec2 a_translation;\nin vec2 a_scale;\nin float a_rotation;\n\nin vec4 a_color1;\nin vec4 a_color2;\n\nout vec4 v_color;\nout vec4 v_position;\n\nmat4 MovementMatrix() {\n    vec2 t = a_translation;\n    vec2 s = a_scale;\n    vec2 r = vec2(cos(a_rotation), sin(a_rotation));\n    vec2 a = u_resolution / max(u_resolution.x, u_resolution.y);\n    mat4 tm = mat4(  1, 0, 0, t.x,     0, 1, 0, t.y,   0,0,1,0,  0,0,0,1);\n    mat4 sm = mat4(  s.x, 0, 0, 0,     0, s.y, 0, 0,   0,0,1,0,  0,0,0,1);\n    mat4 rm = mat4(r.x, -r.y, 0, 0,  r.y, r.x, 0, 0,   0,0,1,0,  0,0,0,1);\n    mat4 am = mat4(  a.y, 0, 0, 0,     0, a.x, 0, 0,   0,0,1,0,  0,0,0,1);\n    return sm * rm * tm * am;\n}\n\nvoid main()\n{\n    vec4 a_color = a_position.x < 0.0 ? a_color1 : a_color2;\n    mat4 mm = MovementMatrix();\n    gl_Position = a_position * mm;\n    v_position = 1. * a_position / abs(a_position);\n    v_color = a_color;\n}";
+var fragmentShaderSource = "#version 300 es\nprecision mediump float;\n\n#define sq(x) ((x) * (x))\n\nin vec4 v_color;\nin vec4 v_position;\nout vec4 outColor;\nuniform float u_width;\n\nvoid main()\n{\n    vec2 uv = v_position.xy;\n    float l = dot(uv, uv);\n    outColor = v_color;\n    if (l > 1.0 || l < sq(.6)) {\n        outColor = vec4(0);\n    }\n}";
 var vertexShader = gl.createShader(gl.VERTEX_SHADER);
 var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
 gl.shaderSource(vertexShader, vertexShaderSource);
@@ -23,11 +23,9 @@ var modelData = (function () {
         -r, -r, r, -r, r, r, /**/ -r, -r, r, r, -r, r,
     ]);
 })();
-// translation (2) -> scale (2) -> rotation (1) -> color (6)
+// translation (2) -> scale (2) -> rotation (1) -> color (8)
 var transformData = new Float32Array([
-    0, 0, 2, 2, .45, 1, 0, 0, 0, 0, 1,
-    // .5, .5,    1, 1,     0,    1,0,0,    1,0,0,
-    -.5, .5, 20, 1, 0, 1, 1, 0, 1, 0, 0,
+    -.6, .7, .5, .5, .45, 1, 1, 1, 1, 1, 1, 1, 1,
 ]);
 gl.clearColor(0, 0, 0, 0);
 gl.clear(gl.COLOR_BUFFER_BIT);
@@ -48,37 +46,42 @@ var rotationAttribLoc = gl.getAttribLocation(program, "a_rotation");
 var scaleAttribLoc = gl.getAttribLocation(program, "a_scale");
 var color1AttribLoc = gl.getAttribLocation(program, "a_color1");
 var color2AttribLoc = gl.getAttribLocation(program, "a_color2");
-gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, transformData, gl.DYNAMIC_DRAW);
-{
-    var F = false;
-    gl.vertexAttribPointer(translationAttribLoc, 2, gl.FLOAT, F, 11 * 4, 0 * 4);
-    gl.vertexAttribPointer(scaleAttribLoc, 2, gl.FLOAT, F, 11 * 4, 2 * 4);
-    gl.vertexAttribPointer(rotationAttribLoc, 1, gl.FLOAT, F, 11 * 4, 4 * 4);
-    gl.vertexAttribPointer(color1AttribLoc, 3, gl.FLOAT, F, 11 * 4, 5 * 4);
-    gl.vertexAttribPointer(color2AttribLoc, 3, gl.FLOAT, F, 11 * 4, 8 * 4);
-}
-gl.vertexAttribDivisor(scaleAttribLoc, 1);
-gl.vertexAttribDivisor(translationAttribLoc, 1);
-gl.vertexAttribDivisor(rotationAttribLoc, 1);
-gl.vertexAttribDivisor(color1AttribLoc, 1);
-gl.vertexAttribDivisor(color2AttribLoc, 1);
 gl.enableVertexAttribArray(translationAttribLoc);
 gl.enableVertexAttribArray(rotationAttribLoc);
 gl.enableVertexAttribArray(scaleAttribLoc);
 gl.enableVertexAttribArray(color1AttribLoc);
 gl.enableVertexAttribArray(color2AttribLoc);
+gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, transformData, gl.DYNAMIC_DRAW);
+var F = false;
+gl.vertexAttribPointer(translationAttribLoc, 2, gl.FLOAT, F, 13 * 4, 0 * 4);
+gl.vertexAttribPointer(scaleAttribLoc, 2, gl.FLOAT, F, 13 * 4, 2 * 4);
+gl.vertexAttribPointer(rotationAttribLoc, 1, gl.FLOAT, F, 13 * 4, 4 * 4);
+gl.vertexAttribPointer(color1AttribLoc, 4, gl.FLOAT, F, 13 * 4, 5 * 4);
+gl.vertexAttribPointer(color2AttribLoc, 4, gl.FLOAT, F, 13 * 4, 9 * 4);
+gl.vertexAttribDivisor(scaleAttribLoc, 1);
+gl.vertexAttribDivisor(translationAttribLoc, 1);
+gl.vertexAttribDivisor(rotationAttribLoc, 1);
+gl.vertexAttribDivisor(color1AttribLoc, 1);
+gl.vertexAttribDivisor(color2AttribLoc, 1);
 gl.resizeCanvas();
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
-addEventListener('resize', function () {
-    gl.resizeCanvas();
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
-    console.log('resizing');
-    draw();
-});
+// addEventListener('resize', () => {
+//     gl.resizeCanvas();
+//     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+//     gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
+//     console.log('resizing');
+//     draw();
+// });
 function draw() {
-    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 2);
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 1);
+    transformData[0] = 0;
+    transformData[1] = 0;
+    transformData[13] = .5;
+    transformData[14] = -.5;
+    gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, transformData, gl.DYNAMIC_DRAW);
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 1);
 }
 draw();

@@ -1,6 +1,6 @@
 const gl = (() => {
     const canvas = document.getElementById('contentWebGL') as HTMLCanvasElement;
-    const gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
+    const gl = canvas.getContext('webgl2', { antialias: true});
     if (!gl) {
         console.error("Failed to get Webgl2 Rendering Context." + 
                       " Update your browser.");
