@@ -119,9 +119,15 @@ Small details
 """
 
 def fix_paths(html):
-    html = re.sub(r'href=(["\'])..\/styles', r'href=\1styles', html)
-    html = re.sub(r'<script\s+src=(["\'])..\/src', r'<script src=\1src', html)
-    return re.sub(r'(?=<[^#])([^>]*=[\'"][^>]*)\.ftml([^>]*>)', r'\1.html\2', html)
+    styles_link_with_dd = r'href=(["\'])..\/styles'; 
+    script_tag_with_dd_src = r'<script\s+src=(["\'])..\/src'
+    script_tag_with_ts_suffix = r'((?=<script)[^>]+\".*)\.ts(\"[^>]*)'
+    non_include_tag_with_ftml = r'(?=<[^#])([^>]*=[\'"][^>]*)\.ftml([^>]*>)'
+
+    html = re.sub(script_tag_with_ts_suffix, r'\1.js\2', html)
+    html = re.sub(styles_link_with_dd, r'href=\1styles', html)
+    html = re.sub(script_tag_with_dd_src, r'<script src=\1src', html)
+    return re.sub(non_include_tag_with_ftml, r'\1.html\2', html)
     
 """
 Main execution cycle

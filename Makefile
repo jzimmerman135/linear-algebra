@@ -12,7 +12,8 @@ JSDIR		:= $(BUILD)/src
 
 # typescript and javascript files
 TSIN		:= $(shell find src -name "*.ts")
-JSOUT		:= $(patsubst %.ts,$(BUILD)/%.js,$(TSIN))
+JSIN		:= $(shell find src -name "*.js")
+JSOUT		:= $(patsubst %,$(BUILD)/%,$(JSIN))
 
 # stylefiles
 STYLES		= $(shell find styles -name "*" -mindepth 1) 
@@ -24,23 +25,27 @@ PAGESOUT	:= $(patsubst pages/%.ftml,$(BUILD)/%.html,$(PAGESIN))
 PROJNAME	:= $(notdir $(PWD))
 
 # everything
-all: ts styles pages
+all: src styles pages
+
+src: $(JSOUT) ts
 
 ts: $(TSIN)
 	tsc $(TSIN) --outDir $(JSDIR)
 
-pages: $(PAGESOUT)
+launch:
+	open $(BUILD)/index.html
 
-styles: $(STYLES)
-	@rm -rvf $(STYLESDIR)/*
-	@mkdir -p $(STYLESDIR)
-	@cp -r styles/ $(STYLESDIR)/
+pages: $(PAGESOUT)
 
 # ftml transpile
 $(BUILD)/%.html: pages/%.ftml
 	@mkdir -p $(@D)	
 	@$(FTML) $^ $@ 
 	@echo "ftml $^ $@"
+
+# copy edited javascript files
+$(BUILD)/src/%.js: src/%.js
+	cp $< $@
 
 .PHONY: all ts pages styles clean
 
@@ -54,4 +59,4 @@ build:
 	@mkdir -p $(LIB_DIR)
 
 clean:
-	-@rm -rvf $(BUILD)/src $(BUILD)/*.html $(BUILD)/styles
+	-@rm -rvf $(BUILD)/src $(BUILD)/*.html

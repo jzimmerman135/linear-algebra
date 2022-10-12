@@ -6,7 +6,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-if [[ $2 == "launch" ]]
+if [[ $1 == "launch" ]]
     then
         open ./build/index.html
 fi
