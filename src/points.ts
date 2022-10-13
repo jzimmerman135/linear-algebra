@@ -1,4 +1,5 @@
-const vertexShaderSource = `#version 300 es
+{
+const vss = `#version 300 es
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_anim;
@@ -35,13 +36,13 @@ void main()
     v_color = a_color;
 }`;
 
-const fragmentShaderSource = `#version 300 es
+const fss = `#version 300 es
 precision mediump float;
 
 #define sq(x) ((x) * (x))
-
 in vec4 v_color;
 in vec4 v_position;
+
 out vec4 outColor;
 uniform float u_width;
 
@@ -55,24 +56,7 @@ void main()
     }
 }`;
 
-const vertexShader = gl.createShader(gl.VERTEX_SHADER) as WebGLShader;
-const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER) as WebGLShader;
-gl.shaderSource(vertexShader, vertexShaderSource);
-gl.shaderSource(fragmentShader, fragmentShaderSource);
-gl.compileShader(vertexShader);
-gl.compileShader(fragmentShader);
-if (shaderCompileFail(vertexShader) || shaderCompileFail(fragmentShader)) {
-    throw Error;
-}
-
-const program = gl.createProgram() as WebGLProgram;
-gl.attachShader(program, vertexShader);
-gl.attachShader(program, fragmentShader);
-gl.linkProgram(program);
-if (shaderLinkFail(program)) {
-    throw Error;
-}
-
+const program = createProgramFromShaders(vss, fss);
 // static
 const modelData = (() => {
     let r = 0.05;
@@ -160,3 +144,4 @@ function draw() {
 }
 
 draw();
+}

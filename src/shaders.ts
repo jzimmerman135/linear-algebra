@@ -42,3 +42,25 @@ function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement) {
     }
     return false;
 }
+
+function createProgramFromShaders(vss: string, fss: string): WebGLProgram {
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER) as WebGLShader;
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER) as WebGLShader;
+    gl.shaderSource(vertexShader, vss);
+    gl.shaderSource(fragmentShader, fss);
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+    if (shaderCompileFail(vertexShader) || shaderCompileFail(fragmentShader)) {
+        throw Error;
+    }
+
+    const program = gl.createProgram() as WebGLProgram;
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    if (shaderLinkFail(program)) {
+        throw Error;
+    }
+
+    return program;
+}

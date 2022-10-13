@@ -15,7 +15,8 @@
     <canvas id="contentWebGL"></canvas>
 </body>
 <script src="src/shaders.ts"></script>
-<script src="src/points.ts"></script>
+<script src="src/colors.ts"></script>
+<script src="src/pointPrimitives.ts"></script>
 <script>
     console.log('hello!');
 </script>
