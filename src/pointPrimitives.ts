@@ -1,8 +1,10 @@
 const Points = (() => {
     
 const MAX_DIM = 0.5;
+const INNER_RADIUS = 0.5; // fraction
 const DEFAULT_SEGMENTS = 30;
 const DEFAULT_INSTANCES = 0;
+const TO_OFFSET = 12;
 const STRIDE = 25;
 
 var n_segments = DEFAULT_SEGMENTS;
@@ -18,7 +20,7 @@ var transformData = new Float32Array([]);
 
 // create model data
 function createModel(n_segments: number) {
-    let r = MAX_DIM * 0.5;
+    let r = MAX_DIM * INNER_RADIUS;
     let m = [];
     let rad = (i: number) => { return Math.PI * 2.0 * i / n_segments };
 
@@ -85,6 +87,8 @@ void main()
 const fragmentShaderSource = `#version 300 es
 precision highp float;
 
+uniform float u_time;
+
 in vec4 v_color1;
 in vec4 v_color2;
 in vec4 v_position;
@@ -96,8 +100,15 @@ void main()
 {
     vec2 uv = v_position.xy;
     outColor = mix(v_color1, v_color2, uv.x * 0.5 + 0.5);
-}
-`
+
+    uv *= 0.5;
+    if (abs(v_anim) > 0.05) {
+        float sign = (v_anim) / abs(v_anim);
+        if (fract(-atan(uv.y, uv.x)/6.28) > u_time * (5.0) * sign) {
+            outColor = vec4(0.0);
+        }
+    }
+}`;
 
 const vertexShader = gl.createShader(gl.VERTEX_SHADER) as WebGLShader;
 const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER) as WebGLShader;
@@ -154,7 +165,7 @@ gl.enableVertexAttribArray(color2FromAttribLoc);
 gl.enableVertexAttribArray(transToAttribLoc);
 gl.enableVertexAttribArray(color1ToAttribLoc);
 gl.enableVertexAttribArray(color2ToAttribLoc);
-// gl.enableVertexAttribArray(animAttribLocation);
+gl.enableVertexAttribArray(animAttribLocation);
 
 let F = false;
 gl.vertexAttribPointer(transFromAttribLoc,  4, gl.FLOAT, F, 25 * 4, 0 * 4);
@@ -163,7 +174,7 @@ gl.vertexAttribPointer(color2FromAttribLoc, 4, gl.FLOAT, F, 25 * 4, 8 * 4);
 gl.vertexAttribPointer(transToAttribLoc,    4, gl.FLOAT, F, 25 * 4, 12 * 4);
 gl.vertexAttribPointer(color1ToAttribLoc,   4, gl.FLOAT, F, 25 * 4, 16 * 4);
 gl.vertexAttribPointer(color2ToAttribLoc,   4, gl.FLOAT, F, 25 * 4, 20 * 4);
-// gl.vertexAttribPointer(animAttribLocation,  1, gl.FLOAT, F, 25 * 4, 24 * 4);
+gl.vertexAttribPointer(animAttribLocation,  1, gl.FLOAT, F, 25 * 4, 24 * 4);
 
 gl.vertexAttribDivisor(transFromAttribLoc, 1);
 gl.vertexAttribDivisor(color1FromAttribLoc, 1);
@@ -171,33 +182,37 @@ gl.vertexAttribDivisor(color2FromAttribLoc, 1);
 gl.vertexAttribDivisor(transToAttribLoc, 1);
 gl.vertexAttribDivisor(color1ToAttribLoc, 1);
 gl.vertexAttribDivisor(color2ToAttribLoc, 1);
-// gl.vertexAttribDivisor(animAttribLocation, 1);
+gl.vertexAttribDivisor(animAttribLocation, 1);
 
 gl.resizeCanvas();
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
 
-// addEventListener('resize', () => {
-//     gl.resizeCanvas();
-//     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-//     gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
-//     console.log('resizing');
-//     draw();
-// });
+gl.disable(gl.DEPTH_TEST);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 
-function draw(time=0) {
+function draw(time?: number) {
     gl.useProgram(program);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.bindVertexArray(vao);
 
-    gl.uniform1f(timeUnifLocation, time);
+    if (time != undefined)
+        gl.uniform1f(timeUnifLocation, time);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, transformData, gl.DYNAMIC_DRAW);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, n_segments * 6, n_instances);
 }
+
+// function resizeAndDraw(time=0) {
+//     gl.resizeCanvas();
+//     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+//     gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
+//     draw();
+// }
 
 function recalculateModel(new_n_segments: number) {
     n_segments = new_n_segments;
@@ -212,8 +227,8 @@ function recalculateModel(new_n_segments: number) {
 function switchFromTo() {
     for (let i = 0; i < n_instances; i++) {
         let fromOffset = i * STRIDE;
-        let toOffset = 12 + i * STRIDE;
-        for (let j = 0; j < 12; j++) {
+        let toOffset = TO_OFFSET + i * STRIDE;
+        for (let j = 0; j < TO_OFFSET; j++) {
             transformData[fromOffset + j] = transformData[toOffset + j];
         }
     }
@@ -223,54 +238,49 @@ function animPoint(i: number, anim: number) {
     transformData[i * STRIDE + STRIDE - 1] = anim;
 }
 
-function setPoint(i: number, from: boolean, x?: number, y?: number,
-                  s?: number, r?: number, c1?:RGBA, c2?:RGBA) {
-    let off = i * STRIDE + (from ? 0 : 13);
-    if (x != undefined)
-        transformData[off + 0] = x;
-    if (y != undefined)
-        transformData[off + 1] = y;
-    if (s != undefined)
-        transformData[off + 2] = s;
-    if (r != undefined)
-        transformData[off + 3] = r;
-    if (c1 != undefined) {
-        transformData[off + 4] = c1.r;
-        transformData[off + 5] = c1.g;
-        transformData[off + 6] = c1.b;
-        transformData[off + 7] = c1.a || 1.0;
-    }
-    if (c2 != undefined) {
-        transformData[off + 8] = c2.r;
-        transformData[off + 9] = c2.g;
-        transformData[off + 10] = c2.b;
-        transformData[off + 11] = c2.a || 1.0;
-    }
+function setPoint(i: number, from: boolean, x: number, y: number,
+                  s: number, r: number, c1:RGBA, c2:RGBA) {
+    let off = i * STRIDE + (from ? 0 : TO_OFFSET);
+    transformData[off + 0] = x;
+    transformData[off + 1] = y;
+    transformData[off + 2] = s;
+    transformData[off + 3] = r;
+    transformData[off + 4] = c1.r;
+    transformData[off + 5] = c1.g;
+    transformData[off + 6] = c1.b;
+    transformData[off + 7] = c1.a || 1.0;
+    transformData[off + 8] = c2.r;
+    transformData[off + 9] = c2.g;
+    transformData[off + 10] = c2.b;
+    transformData[off + 11] = c2.a || 1.0;
 }
 
-function setPointTo(index: number, x?: number, y?: number, s?: number,
-                        r?: number, c1?:RGBA, c2?:RGBA) {
-    setPoint(index, false, x, y, s, r, c1, c2);
+function setPointTo(p: Point) {
+    setPoint(p.index, false, p.x, p.y, p.s, p.r, p.c1, p.c2);
 }
 
-function setPointFrom(index: number, x?: number, y?: number, s?: number,
-                        r?: number, c1?:RGBA, c2?:RGBA) {
-    setPoint(index, true, x, y, s, r, c1, c2);
+function setPointFrom(p: Point) {
+    setPoint(p.index, true, p.x, p.y, p.s, p.r, p.c1, p.c2);
 }
 
 function newPoint() {
-    
+    let p = { x: 0, y: 0, s: 1, r: 0, c1: Colors.white, c2: Colors.white };
+    let index = n_instances;
     let longerData = new Float32Array(transformData.length + STRIDE);
     longerData.set(transformData);
     transformData = longerData;
-    setPointFrom(n_instances, 0, 0, 1, 0, Colors.white, Colors.white);
-    setPointTo(n_instances, 0, 0, 1, 0, Colors.white, Colors.white);
+    setPoint(index, true, p.x, p.y, p.s, p.r, p.c1, p.c2);
+    setPoint(index, false, p.x, p.y, p.s, p.r, p.c1, p.c2);
     animPoint(n_instances, 0);
     n_instances++;
     n_vertices = n_instances * 6;
+    return [index, p] as const;
 }
 
 return {
+    ANIM_NONE: 0,
+    ANIM_OPEN: 1,
+    ANIM_CLOSE: -1,
     program: program,
     model: {data: modelData, buffer: modelBuffer},
     instances: {data: transformData, buffer: modelBuffer},
@@ -279,16 +289,117 @@ return {
     n_instances: n_instances,
     setSegments: recalculateModel,
     draw: draw,
-    setAnim: animPoint,
-    setFromAsTo: switchFromTo,
+    setOpenAnim: (i: number, anim: boolean) => {animPoint(i, anim ? 1 : 0)},
+    setCloseAnim: (i: number, anim: boolean) => {animPoint(i, anim ? -1 : 0)},
+    setAnim: (i: number, anim: number) => {animPoint(i, anim)},
+    setToAsFrom: switchFromTo,
     setTo: setPointTo,
     setFrom: setPointFrom, 
     addOne: newPoint,
+    resizeAndDraw: () => {
+        gl.useProgram(program);
+        console.log("resized");
+        gl.resizeCanvas();
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
+        draw();
+    }
 };
 })();
 
+Points.setSegments(50);
 
-Points.addOne();
+addEventListener('resize', () => {
+    Points.resizeAndDraw();
+});
+
+function animate() {
+    var then = 0;
+    function render(now: number) {
+        now *= 0.001;  // convert to seconds
+        const time = (now - then) / 1;
+        Points.draw(time);
+        if (time > 1)
+            return;
+        
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+    return true;
+}
+
+// Points.setCloseAnim(0, true);
+// Points.setToAsFrom();
+
+// setTimeout(() => {
+//     Points.setTo(0, 0, 0, );
+// }, 2000);
+
+interface PointSettings {
+    x?: number;
+    y?: number;
+    s?: number;
+    r?: number;
+    c1?: RGBA; 
+    c2?: RGBA;
+};
+
+class Point {
+    index: number;
+    x: number;
+    y: number;
+    s: number;
+    r: number;
+    c1: RGBA; 
+    c2: RGBA;
+
+    constructor(settings?: PointSettings) {
+        let [index, defaultSettings] = Points.addOne();
+        this.index = index;
+        this.x = defaultSettings.x;
+        this.y = defaultSettings.y;
+        this.s = defaultSettings.s;
+        this.r = defaultSettings.r;
+        this.c1 = defaultSettings.c1;
+        this.c2 = defaultSettings.c2;
+        if (settings != undefined)
+            this.unpackSettings(settings);
+        Points.setFrom(this);
+        Points.setTo(this);
+    }
+
+    unpackSettings(settings: PointSettings) {
+        this.x = settings.x || this.x;
+        this.y = settings.y || this.y;
+        this.s = settings.s || this.s;
+        this.r = settings.r || this.r;
+        this.c1 = settings.c1 || this.c1;
+        this.c2 = settings.c2 || this.c2;
+    }
+
+    to(settings: PointSettings) {
+        Points.setAnim(this.index, Points.ANIM_NONE);
+        this.unpackSettings(settings);
+        Points.setTo(this);
+    }
+
+    init(settings: PointSettings) {
+        this.unpackSettings(settings);
+        Points.setFrom(this);
+        Points.setTo(this);
+        Points.setAnim(this.index, Points.ANIM_OPEN);
+    }
+
+    destroy(settings: PointSettings) {
+        this.unpackSettings(settings);
+        Points.setTo(this);
+        Points.setAnim(this.index, Points.ANIM_CLOSE);
+    }
+}
+
+let p1 = new Point({c1: Colors.yellow, c2: Colors.orange});
 Points.draw();
+p1.to({x: .5, s: 4, c1: Colors.orange, c2: Colors.red});
 
-Points.setTo(0, 50, 50, 20, 0, Colors.red, Colors.blue);
+animate();
+// console.log(p1);

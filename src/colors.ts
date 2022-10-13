@@ -15,14 +15,18 @@ const Colors = (() => {
     let White: RGBA = {r: 1, g: 1, b: 1, a: 1};
     let Red: RGBA = {r: 1, g: 0, b: 0, a: 1};
     let Green: RGBA = {r: 0, g: 1, b: 0, a: 1};
-    let Blue: RGBA = {r: 0, g: 0, b: 0, a: 1};
+    let Blue: RGBA = {r: 0, g: 0, b: 1, a: 1};
+    let Yellow: RGBA = {r: 0, g: 1, b: 1, a: 1};
+    let Orange: RGBA = {r: 1, g: 1, b: 0, a: 1};
 
     let colors = {
         black: Black,
         white: White,
         red: Red,
         green: Green,
-        blue: Blue
+        blue: Blue,
+        yellow: Yellow,
+        orange: Orange,
     };
 
     return colors;
