@@ -2,13 +2,14 @@
 TS			:= tsc
 FTML		:= ./.ftml
 
-# transpiler flags
-TSFLAGS		:=
 
 # build directory
-BUILD		:= ./build
+BUILD		:= ./dist
 STYLESDIR	:= $(BUILD)/styles
 JSDIR		:= $(BUILD)/src
+
+# transpiler flags
+TSFLAGS		:= --target es6  --outDir $(JSDIR)
 
 # typescript and javascript files
 TSIN		:= $(shell find src -name "*.ts")
@@ -32,7 +33,7 @@ all: src styles pages
 src: $(JSOUT) ts
 
 ts: $(TSIN)
-	tsc $(TSIN) --outDir $(JSDIR)
+	tsc $(TSIN) $(TSFLAGS)
 
 launch:
 	open $(BUILD)/index.html

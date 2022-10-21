@@ -21,7 +21,7 @@ var transformData = new Float32Array([]);
 // create model data
 function createModel(n_segments: number) {
     let r = MAX_DIM * INNER_RADIUS;
-    let m = [];
+    let m: number[] = [];
     let rad = (i: number) => { return Math.PI * 2.0 * i / n_segments };
 
     // calculate hollow circle
@@ -116,7 +116,7 @@ gl.shaderSource(vertexShader, vertexShaderSource);
 gl.shaderSource(fragmentShader, fragmentShaderSource);
 gl.compileShader(vertexShader);
 gl.compileShader(fragmentShader);
-if (shaderCompileFail(vertexShader) || shaderCompileFail(fragmentShader)) {
+if (shaders.shaderCompileFail(vertexShader) || shaders.shaderCompileFail(fragmentShader)) {
     throw Error;
 }
 
@@ -124,7 +124,7 @@ const program = gl.createProgram() as WebGLProgram;
 gl.attachShader(program, vertexShader);
 gl.attachShader(program, fragmentShader);
 gl.linkProgram(program);
-if (shaderLinkFail(program)) {
+if (shaders.shaderLinkFail(program)) {
     throw Error;
 }
 
@@ -184,7 +184,7 @@ gl.vertexAttribDivisor(color1ToAttribLoc, 1);
 gl.vertexAttribDivisor(color2ToAttribLoc, 1);
 gl.vertexAttribDivisor(animAttribLocation, 1);
 
-gl.resizeCanvas();
+shaders.resizeCanvas();
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
 
@@ -239,7 +239,7 @@ function animPoint(i: number, anim: number) {
 }
 
 function setPoint(i: number, from: boolean, x: number, y: number,
-                  s: number, r: number, c1:RGBA, c2:RGBA) {
+                  s: number, r: number, c1: RGBA, c2: RGBA) {
     let off = i * STRIDE + (from ? 0 : TO_OFFSET);
     transformData[off + 0] = x;
     transformData[off + 1] = y;
@@ -299,7 +299,7 @@ return {
     resizeAndDraw: () => {
         gl.useProgram(program);
         console.log("resized");
-        gl.resizeCanvas();
+        shaders.resizeCanvas();
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
         draw();

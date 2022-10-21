@@ -56,7 +56,8 @@ void main()
     }
 }`;
 
-const program = createProgramFromShaders(vss, fss);
+const program = gl.createProgram() as WebGLProgram;
+shaders.compileProgram(program, vss, fss);
 // static
 const modelData = (() => {
     let r = 0.05;
@@ -115,9 +116,7 @@ gl.vertexAttribDivisor(rotationAttribLoc, 1);
 gl.vertexAttribDivisor(color1AttribLoc, 1);
 gl.vertexAttribDivisor(color2AttribLoc, 1);
 
-
-
-gl.resizeCanvas();
+shaders.resizeCanvas();
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 gl.uniform2f(resolutionUnifLocation, gl.canvas.width, gl.canvas.height);
 
